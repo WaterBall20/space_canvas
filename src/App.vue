@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { startRenderLoop } from "./canvas/renderer";
-import { WSClient, type PlayerData as PosData } from "./api/websocketClient";
+import { WSClient, type PosData as PosData } from "./api/websocketClient";
 import { AnimationValue } from "./animation/value";
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
@@ -17,8 +17,17 @@ const camera = {
     dpr: 1,
 };
 
+interface UIPosList {
+    list: Array<PosData>;
+    type: string;
+    color: string;
+}
+
 const maxZoon = 111320; //
+//自动缩放
 let autoZoon = true;
+//最大单实体显示列表数量
+let aPosListMaxLen = 1000;
 
 //鼠标点
 const mousePos = {
@@ -26,41 +35,49 @@ const mousePos = {
     y: 0,
 };
 
-//地图数据统计
+//地图数据
 const mapData = {
     x: {
-        min: 0,
-        max: 0,
+        min: -5,
+        max: 5,
     },
     y: {
-        min: 0,
-        max: 0,
+        min: -5,
+        max: 5,
+    },
+    list: {
+        value: new Map<String, UIPosList>(),
+        len: 0,
+    },
+    gameLiving: {
+        value: new Map<string, PosData>(),
     },
 };
 
 const wsClient = new WSClient("ws://192.168.43.85:4101"); // 服务端地址
 
-wsClient.onMessage((pos: PosData) => {
-    if (!posArr.length) {
-        //初始化统计
-        mapData.x.max = mapData.x.min = pos.x;
-        mapData.y.max = mapData.y.min = pos.y;
-    } else {
-        //判断并更新地图统计数据
-        if (pos.x > mapData.x.max) {
-            mapData.x.max = pos.x;
-        } else if (pos.x < mapData.x.min) {
-            mapData.x.min = pos.x;
+wsClient.onMessage((posList: Array<PosData>) => {
+    mapData.gameLiving.value = new Map();
+    for (let pos of posList) {
+        let posList = mapData.list.value.get(pos.uuid);
+        if (!posList) {
+            //游戏实体特殊处理
+            if (pos.type != "living" && pos.type != "entity") {
+                posList = {
+                    list: new Array(),
+                    type: pos.type,
+                    //随机颜色
+                    color: `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`,
+                };
+                mapData.list.value.set(pos.uuid, posList);
+                mapData.list.len++;
+            }
         }
-        if (pos.y > mapData.y.max) {
-            mapData.y.max = pos.y;
-        } else if (pos.y < mapData.y.min) {
-            mapData.y.min = pos.y;
-        }
-        //自动缩放
+
+        //自动缩放和居中
         if (autoZoon) {
-            //自动居中
             autoZoonFun();
+            //自动居中
             camera.position.x.setEndValue(
                 camera.time,
                 mapData.x.min + (mapData.x.max - mapData.x.min) / 2,
@@ -70,34 +87,94 @@ wsClient.onMessage((pos: PosData) => {
                 mapData.y.min + (mapData.y.max - mapData.y.min) / 2,
             );
         }
+        if (posList) {
+            //
+            let endPos = posList.list[posList.list.length - 1];
+            if (
+                endPos == undefined ||
+                endPos.name != pos.name ||
+                endPos.type != pos.type ||
+                endPos.x != pos.x ||
+                endPos.y != pos.y ||
+                endPos.z != pos.z ||
+                endPos.yaw != pos.yaw
+            ) {
+                posList.list.push(pos);
+                if (posList.list.length > aPosListMaxLen) {
+                    for (let i = 0; i < posList.list.length - 1; i++) {
+                        posList.list[i] = posList.list[i + 1];
+                    }
+                    posList.list.pop();
+                }
+            }
+        } else {
+            mapData.gameLiving.value.set(pos.uuid, pos);
+        }
     }
-    posArr.push(pos);
 });
 
 /**
  * 自动缩放
  */
 function autoZoonFun() {
-    if (posArr.length > 1) {
+    //迭代所有重置最值
+
+    let minX = Number.MAX_SAFE_INTEGER;
+    let maxX = Number.MIN_SAFE_INTEGER;
+    let minY = Number.MAX_SAFE_INTEGER;
+    let maxY = Number.MIN_SAFE_INTEGER;
+    let count = 0; //计算次数
+
+    //判断并更新地图统计数据
+    function mapMaxMin(pos: PosData) {
+        if (pos.x > maxX) {
+            maxX = pos.x;
+        }
+        if (pos.x < minX) {
+            minX = pos.x;
+        }
+        if (pos.y > maxY) {
+            maxY = pos.y;
+        }
+        if (pos.y < minY) {
+            minY = pos.y;
+        }
+        count++;
+    }
+    for (let posList of mapData.list.value.values()) {
+        for (let pos of posList.list) {
+            mapMaxMin(pos);
+        }
+    }
+    for (let pos of mapData.gameLiving.value.values()) {
+        mapMaxMin(pos);
+    }
+    if (count > 1) {
+        mapData.x.max = maxX;
+        mapData.x.min = minX;
+        mapData.y.max = maxY;
+        mapData.y.min = minY;
         //地图有效宽度和高度
         let mapW = mapData.x.max - mapData.x.min;
         let mapH = mapData.y.max - mapData.y.min;
-        let c = canvasRef.value!;
-        //宽度和高度的缩放
-        let wZoon = c.width / mapW / 1.1;
-        let hZoon = c.height / mapH / 1.1;
-        let zoon;
-        //取最小缩放，以完全显示
-        if (wZoon < hZoon) {
-            zoon = wZoon;
+        if (mapW || mapH) {
+            let c = canvasRef.value!;
+            //宽度和高度的缩放
+            let wZoon = c.width / mapW / 1.1;
+            let hZoon = c.height / mapH / 1.1;
+            let zoon;
+            //取最小缩放，以完全显示
+            if (wZoon < hZoon) {
+                zoon = wZoon;
+            } else {
+                zoon = hZoon;
+            }
+            camera.zoom.setEndValue(camera.time, zoon);
         } else {
-            zoon = hZoon;
+            camera.zoom.setEndValue(camera.time, maxZoon);
         }
-        camera.zoom.setEndValue(camera.time, zoon);
     }
 }
-
-const posArr = new Array();
 
 /**
  * 从地图坐标到画布坐标
@@ -195,37 +272,72 @@ function render(
         ex: number,
         ey: number,
         width: number,
-        color: string,
+        color: string | undefined = undefined,
     ) {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(ex, ey);
 
         ctx.lineWidth = width;
-        ctx.strokeStyle = color;
+        if (color) ctx.strokeStyle = color;
         ctx.stroke();
+    }
+
+    /**
+     * 绘制文本
+     * @param value 内容
+     * @param x 画布坐标X
+     * @param y 画布坐标Y
+     * @param lineHeight 行高
+     * @param color 颜色
+     */
+    function drawText(
+        value: string,
+        x: number,
+        y: number,
+        lineHeight: number,
+        color: string | undefined,
+    ) {
+        if (color) {
+            ctx.fillStyle = color;
+        }
+        let lines = value.split("\n");
+        lines.forEach((line, index) => {
+            //对其
+            switch (ctx.textBaseline) {
+                case "top":
+                    ctx.fillText(line, x, y + index * lineHeight);
+                    break;
+                case "bottom":
+                    ctx.fillText(line, x, y - index * lineHeight);
+                    break;
+                default:
+                    ctx.fillText("警告：使用暂不支持的对其方式", x, y);
+            }
+        });
     }
 
     //
     camera.time = time;
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    //绘制标线和文本
-    ctx.font = "24px sans-serif";
     //线大小
     let s = 1;
-    //
+    //画布起始世界坐标
     let canvasStartPos = canvasPosToMapPos(time, canvas, 0, 0);
+    //画布结束世界坐标
     let canvasEndPos = canvasPosToMapPos(
         time,
         canvas,
         canvas.width,
         canvas.height,
     );
+    //世界坐标差
     let cESP = {
         x: canvasEndPos.x - canvasStartPos.x,
         y: canvasEndPos.y - canvasStartPos.y,
     };
+    //网格间距
     let cgs = calcGridSpacing(
         canvasStartPos.x,
         canvasEndPos.x,
@@ -281,6 +393,9 @@ function render(
         const precision = 12; // 防止 0.30000000004
         return parseFloat(value.toFixed(precision));
     }
+    //绘制标线和文本
+    let fontS = 16 * camera.dpr; //字体大小
+    ctx.font = `${fontS}px sans-serif`;
     //经度
     ctx.textAlign = "center";
     let xLineCount = Math.round(cESP.x / cgs + 1);
@@ -308,39 +423,95 @@ function render(
     //鼠标测试
     ctx.fillStyle = "#f8a";
     ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    let mousePosW = canvasPosToMapPos(time, canvas, mousePos.x, mousePos.y);
-    ctx.fillText(`x=${mousePosW.x} y=${mousePosW.y}`, mousePos.x, mousePos.y);
+    let mouseMapPos = canvasPosToMapPos(time, canvas, mousePos.x, mousePos.y);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(mouseMapPos.x.toString(), mousePos.x, fontS + 5);
+    drawLine(mousePos.x, 0, mousePos.x, canvas.height, 1, ctx.fillStyle);
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+    ctx.fillText(mouseMapPos.y.toString(), 5, mousePos.y);
+    drawLine(5, mousePos.y, canvas.width, mousePos.y, 1, ctx.fillStyle);
 
     let rs = 5;
-    for (let i = 0; i < posArr.length; i++) {
-        let pos: PosData = posArr[i];
-        let cPos = mapPosToCanvasPos(time, canvas, pos.x, pos.y);
+    //迭代渲染
+    for (let posList of mapData.list.value.values()) {
+        for (let i = 0; i < posList.list.length; i++) {
+            let posData = posList.list[i];
+            let cPos = mapPosToCanvasPos(time, canvas, posData.x, posData.y);
+            let cPosIsDraw =
+                cPos.x + rs > 0 &&
+                cPos.x - rs < canvas.width &&
+                cPos.y + rs &&
+                cPos.y - rs < canvas.height;
+            if (cPosIsDraw) {
+                drawPoint(cPos.x, cPos.y, rs, posList.color);
+                //最后一个附加文本和坐标线
+                if (i + 1 == posList.list.length) {
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    let text = `(${posData.x}, ${posData.y})`;
+                    if (posData.name) {
+                        text = posData.name + "\n" + text;
+                    }
+                    drawText(text, cPos.x, cPos.y, fontS, "#faf");
+                    //绘制坐标线
+                    drawLine(
+                        cPos.x,
+                        0,
+                        cPos.x,
+                        canvas.height,
+                        1,
+                        posList.color,
+                    );
+                    drawLine(0, cPos.y, canvas.width, cPos.y, 1, posList.color);
+                }
+            }
+            if (i > 0) {
+                let lastPos: PosData = posList.list[i - 1];
+                let cLastPos = mapPosToCanvasPos(
+                    time,
+                    canvas,
+                    lastPos.x,
+                    lastPos.y,
+                );
+                if (
+                    cPosIsDraw ||
+                    (cLastPos.x + rs > 0 &&
+                        cLastPos.x - rs < canvas.width &&
+                        cLastPos.y + rs &&
+                        cLastPos.y - rs < canvas.height)
+                ) {
+                    drawLine(
+                        cPos.x,
+                        cPos.y,
+                        cLastPos.x,
+                        cLastPos.y,
+                        rs,
+                        posList.color,
+                    );
+                }
+            }
+        }
+    }
+    //游戏实体渲染
+    for (let posData of mapData.gameLiving.value.values()) {
+        let cPos = mapPosToCanvasPos(time, canvas, posData.x, posData.y);
         let cPosIsDraw =
             cPos.x + rs > 0 &&
             cPos.x - rs < canvas.width &&
             cPos.y + rs &&
             cPos.y - rs < canvas.height;
         if (cPosIsDraw) {
-            drawPoint(cPos.x, cPos.y, rs, "red");
-        }
-        if (i > 0) {
-            let lastPos: PosData = posArr[i - 1];
-            let cLastPos = mapPosToCanvasPos(
-                time,
-                canvas,
-                lastPos.x,
-                lastPos.y,
-            );
-            if (
-                cPosIsDraw ||
-                (cLastPos.x + rs > 0 &&
-                    cLastPos.x - rs < canvas.width &&
-                    cLastPos.y + rs &&
-                    cLastPos.y - rs < canvas.height)
-            ) {
-                drawLine(cPos.x, cPos.y, cLastPos.x, cLastPos.y, rs, "red");
+            drawPoint(cPos.x, cPos.y, rs, "#888");
+            //最后一个附加文本
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            let text = ""; // = `(${posData.x}, ${posData.y})`;
+            if (posData.name) {
+                text = posData.name + "\n" + text;
             }
+            drawText(text, cPos.x, cPos.y + rs * 2, fontS, "#faf");
         }
     }
 }
@@ -474,24 +645,65 @@ onMounted(() => {
         window.addEventListener("wheel", onWheel);
 
         //触控
-        let lastTouchPos = new Array();
+        let lastTouchCPos = {
+            x: 0,
+            y: 0,
+        };
+        let lastTouchD = 0;
+
+        function getTouchC(e: TouchEvent) {
+            let touch1 = e.touches[0];
+            let touch2 = e.touches[1];
+            let x1 = touch1.clientX;
+            let y1 = touch1.clientY;
+            let x2 = touch2.clientX;
+            let y2 = touch2.clientY;
+            let cx = Math.abs(x1 - x2) / 2;
+            if (x1 < x2) {
+                cx += x1;
+            } else {
+                cx += x2;
+            }
+            let cy = Math.abs(y2 - y1) / 2;
+            if (y1 < y2) {
+                cy += y1;
+            } else {
+                cy += y2;
+            }
+            return { x: cx * camera.dpr, y: cy * camera.dpr };
+        }
+
+        function getDistance(x1: number, y1: number, x2: number, y2: number) {
+            let xx = x2 - x2;
+            let yy = y2 - y1;
+            if (xx == 0) {
+                return yy;
+            } else if (yy == 0) {
+                return xx;
+            }
+            return Math.abs(Math.sqrt(xx * xx + yy * yy));
+        }
+
         //按下
         window.addEventListener(
             "touchstart",
             (e) => {
                 e.preventDefault();
-                for (let i = 0; e.touches.length; ++i) {
-                    let touch = e.touches[i];
-                    if (i == 0) {
-                        handlePointerDown(
-                            touch.clientX * camera.dpr,
-                            touch.clientY * camera.dpr,
-                        );
-                    }
-                    lastTouchPos[i] = {
-                        x: touch.clientX,
-                        y: touch.clientY,
-                    };
+                if (e.touches.length == 1) {
+                    let touch = e.touches[0];
+                    handlePointerDown(
+                        touch.clientX * camera.dpr,
+                        touch.clientY * camera.dpr,
+                    );
+                } else {
+                    let cPos = getTouchC(e);
+                    lastTouchCPos = cPos;
+                    lastTouchD = getDistance(
+                        e.touches[0].clientX,
+                        e.touches[0].clientY,
+                        e.touches[1].clientX,
+                        e.touches[1].clientY,
+                    );
                 }
             },
             { passive: false },
@@ -501,20 +713,74 @@ onMounted(() => {
             "touchmove",
             (e) => {
                 e.preventDefault();
-                for (let i = 0; e.touches.length; ++i) {
-                    let touch = e.touches[i];
-                    if (i == 0) {
-                        handlePointerMove(
-                            touch.clientX * camera.dpr,
-                            touch.clientY * camera.dpr,
-                        );
-                    }
-
-                    //
-                    lastTouchPos[i] = {
-                        x: touch.clientX,
-                        y: touch.clientY,
-                    };
+                if (e.touches.length == 1) {
+                    let touch = e.touches[0];
+                    handlePointerMove(
+                        touch.clientX * camera.dpr,
+                        touch.clientY * camera.dpr,
+                    );
+                } else {
+                    //移动
+                    let cPos = getTouchC(e);
+                    let xm = cPos.x - lastTouchCPos.x;
+                    let ym = cPos.y - lastTouchCPos.y;
+                    camera.position.x
+                        .setEndValue(
+                            camera.time,
+                            camera.position.x.getEndValue() -
+                                xm / camera.zoom.getEndValue(),
+                        )
+                        .toEndValue();
+                    camera.position.y
+                        .setEndValue(
+                            camera.time,
+                            camera.position.y.getEndValue() -
+                                ym / camera.zoom.getEndValue(),
+                        )
+                        .toEndValue();
+                    lastTouchCPos = cPos;
+                    //缩放
+                    let cMapPos = canvasPosToMapPos(
+                        camera.time,
+                        canvas,
+                        cPos.x,
+                        cPos.y,
+                    );
+                    let touch1 = e.touches[0];
+                    let touch2 = e.touches[1];
+                    let x1 = touch1.clientX;
+                    let y1 = touch1.clientY;
+                    let x2 = touch2.clientX;
+                    let y2 = touch2.clientY;
+                    let d = getDistance(x1, y1, x2, y2);
+                    let dd = d / lastTouchD;
+                    camera.zoom
+                        .setEndValue(
+                            camera.time,
+                            camera.zoom.getEndValue() * dd,
+                        )
+                        .toEndValue();
+                    lastTouchD = d;
+                    let newCMapPos = canvasPosToMapPos(
+                        camera.time,
+                        canvas,
+                        cPos.x,
+                        cPos.y,
+                    );
+                    camera.position.x
+                        .setEndValue(
+                            camera.time,
+                            camera.position.x.getEndValue() +
+                                (cMapPos.x - newCMapPos.x),
+                        )
+                        .toEndValue();
+                    camera.position.y
+                        .setEndValue(
+                            camera.time,
+                            camera.position.y.getEndValue() +
+                                (cMapPos.y - newCMapPos.y),
+                        )
+                        .toEndValue();
                 }
             },
             { passive: false },

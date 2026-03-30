@@ -1,8 +1,12 @@
 // websocketClient.ts
-export interface PlayerData {
+export interface PosData {
+    type: string;
+    uuid: string;
+    name: string;
     x: number;
     y: number;
     z: number;
+    time: number;
     yaw?: number;
     pitch?: number;
 }
@@ -11,7 +15,7 @@ export class WSClient {
     private ws: WebSocket | null = null;
     private url: string;
     private reconnectInterval: number;
-    private onMessageCallback: ((data: PlayerData) => void) | null = null;
+    private onMessageCallback: ((data: Array<PosData>) => void) | null = null;
 
     constructor(url: string, reconnectInterval = 3000) {
         this.url = url;
@@ -28,10 +32,15 @@ export class WSClient {
 
         this.ws.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data) as PlayerData;
+                const data = JSON.parse(event.data) as Array<PosData>;
                 if (this.onMessageCallback) this.onMessageCallback(data);
             } catch (err) {
-                console.error("接收消息解析错误", err);
+                console.error(
+                    "接收消息解析错误, data",
+                    event.data,
+                    "err:",
+                    err,
+                );
             }
         };
 
@@ -52,7 +61,7 @@ export class WSClient {
         }
     }
 
-    public onMessage(callback: (data: PlayerData) => void) {
+    public onMessage(callback: (data: Array<PosData>) => void) {
         this.onMessageCallback = callback;
     }
 }
