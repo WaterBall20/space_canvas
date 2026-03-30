@@ -54,7 +54,7 @@ const mapData = {
     },
 };
 
-const wsClient = new WSClient("ws://192.168.43.85:4101"); // 服务端地址
+const wsClient = new WSClient("ws://127.0.0.1:4101"); // 服务端地址
 
 wsClient.onMessage((posList: Array<PosData>) => {
     mapData.gameLiving.value = new Map();
@@ -169,6 +169,7 @@ function autoZoonFun() {
             } else {
                 zoon = hZoon;
             }
+            if (zoon > maxZoon) zoon = maxZoon;
             camera.zoom.setEndValue(camera.time, zoon);
         } else {
             camera.zoom.setEndValue(camera.time, maxZoon);
