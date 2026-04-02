@@ -1,15 +1,5 @@
-// websocketClient.ts
-export interface PosData {
-    type: string;
-    uuid: string;
-    name: string;
-    x: number;
-    y: number;
-    z: number;
-    time: number;
-    yaw?: number;
-    pitch?: number;
-}
+import type { PosData } from "../data/mapData";
+
 
 export class WSClient {
     private ws: WebSocket | null = null;
@@ -55,9 +45,9 @@ export class WSClient {
         };
     }
 
-    public send(data: any) {
+    public send(data: string) {
         if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify(data));
+            this.ws.send(data);
         }
     }
 
