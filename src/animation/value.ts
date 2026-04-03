@@ -1,7 +1,4 @@
-import {
-    DecelerateInterpolator,
-    type Interpolator,
-} from "./Interpolator";
+import {DecelerateInterpolator, type Interpolator,} from "./Interpolator";
 
 export class AnimationValue {
     private startValue = 0;
@@ -10,15 +7,16 @@ export class AnimationValue {
     private startTime = 0;
     private interpolator: Interpolator = new DecelerateInterpolator();
 
-    constructor() {}
+    constructor() {
+    }
 
-    public setTime(thisTime: number, value: number) {
+    public setTime(thisTime: number, value: number): AnimationValue {
         if (this.time != value) {
             this.startValue = this.getValue(thisTime);
             this.startTime = thisTime;
             this.time = value;
-            
         }
+        return this
     }
 
     public setInterpolator(value: Interpolator): AnimationValue {

@@ -1,4 +1,4 @@
-import { maxZoon, type Camera } from "../canvas/canvas";
+import {type Camera, maxZoon} from "../canvas/canvas";
 //鼠标点
 export const mousePos = {
     x: 0,
@@ -8,47 +8,45 @@ export const mousePos = {
 //事件监听函数
 //正在按下
 let isPointerDown = false;
+
 ///按下
 export function handlePointerDown(x: number, y: number) {
     isPointerDown = true;
-    //console.debug("onMuseDown", e);
     mousePos.x = x;
     mousePos.y = y;
 }
+
 //移动
 export function handlePointerMove(camera: Camera, x: number, y: number) {
-    //console.debug("onMouseMove", e);
     if (isPointerDown) {
-        //console.debug("isMouseDown", "onMouseMove", e);
         let thisLastX = x - mousePos.x;
         let thisLastY = y - mousePos.y;
-        //console.debug("this-last_x", thisLastX);
-        //console.debug("this-last_y", thisLastY);
         //更改坐标
         camera.position.x
             .setEndValue(
                 camera.time,
                 camera.position.x.getEndValue() -
-                    thisLastX / camera.zoom.getEndValue(),
+                thisLastX / camera.zoom.getEndValue(),
             )
             .toEndValue();
         camera.position.y
             .setEndValue(
                 camera.time,
                 camera.position.y.getEndValue() -
-                    thisLastY / camera.zoom.getEndValue(),
+                thisLastY / camera.zoom.getEndValue(),
             )
             .toEndValue();
-        //console.debug("camera", camera);
     }
     //更新
     mousePos.x = x;
     mousePos.y = y;
 }
+
 //松开
 export function handlePointerUp() {
     isPointerDown = false;
 }
+
 //滚轮
 export function onWheel(
     camera: Camera,
@@ -182,14 +180,14 @@ export function TouchMove(
             .setEndValue(
                 camera.time,
                 camera.position.x.getEndValue() -
-                    xm / camera.zoom.getEndValue(),
+                xm / camera.zoom.getEndValue(),
             )
             .toEndValue();
         camera.position.y
             .setEndValue(
                 camera.time,
                 camera.position.y.getEndValue() -
-                    ym / camera.zoom.getEndValue(),
+                ym / camera.zoom.getEndValue(),
             )
             .toEndValue();
         mousePos.x = cPos.x;
@@ -224,4 +222,12 @@ export function TouchMove(
             .toEndValue();
     }
     lastTouchCount = e.touches.length;
+}
+
+export function KeyDown() {
+
+}
+
+export function KeyUP() {
+
 }

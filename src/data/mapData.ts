@@ -1,4 +1,5 @@
-import type { Camera } from "../canvas/canvas";
+import type {Camera} from "../canvas/canvas";
+import {AnimationValue} from "../animation/value.ts";
 
 // websocketClient.ts
 export interface PosData {
@@ -12,6 +13,18 @@ export interface PosData {
     yaw?: number;
     pitch?: number;
 }
+
+export interface EntityUIPos {
+    type: string;
+    name: string;
+    x: AnimationValue;
+    y: AnimationValue;
+    z: AnimationValue;
+    time: number;
+    yaw: AnimationValue;
+    pitch: AnimationValue;
+}
+
 //最大单实体显示列表数量
 let aPosListMaxLen = 1000;
 
@@ -31,13 +44,14 @@ export class MapData {
         len: 0,
     };
     gameEntityList = {
-        value: new Map<string, PosData>(),
+        value: new Map<string, EntityUIPos>(),
     };
 
-    constructor() {}
+    constructor() {
+    }
 
     public updatePos(posList: Array<PosData>, camera: Camera) {
-        this.gameEntityList.value = new Map();
+        let newGameEntityList = new Map<string, EntityUIPos>();
         for (let pos of posList) {
             let posList = this.list.value.get(pos.uuid);
             if (!posList) {
@@ -46,27 +60,14 @@ export class MapData {
                     posList = {
                         list: [],
                         type: pos.type,
-                        //随机颜色
-                        color: `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`,
+                        name: pos.name
                     };
                     this.list.value.set(pos.uuid, posList);
                     this.list.len++;
                 }
             }
 
-            //自动缩放和居中
-            if (camera.autoZoon) {
-                camera.autoZoonFun(this);
-                //自动居中
-                camera.position.x.setEndValue(
-                    camera.time,
-                    this.x.min + (this.x.max - this.x.min) / 2,
-                );
-                camera.position.y.setEndValue(
-                    camera.time,
-                    this.y.min + (this.y.max - this.y.min) / 2,
-                );
-            }
+
             if (posList) {
                 //
                 let endPos = posList.list[posList.list.length - 1];
@@ -88,8 +89,49 @@ export class MapData {
                     }
                 }
             } else {
-                this.gameEntityList.value.set(pos.uuid, pos);
+                let listItem = this.gameEntityList.value.get(pos.uuid);
+                if (!listItem) {
+                    listItem = {
+                        type: pos.type,
+                        name: pos.name,
+                        x: new AnimationValue(),
+                        y: new AnimationValue(),
+                        z: new AnimationValue(),
+                        time: pos.time,
+                        yaw: new AnimationValue(),
+                        pitch: new AnimationValue()
+                    }
+                    listItem.x.setTime(camera.time, 500).setEndValue(0, pos.x).toEndValue()
+                    listItem.y.setTime(camera.time, 500).setEndValue(0, pos.y).toEndValue()
+                    listItem.z.setTime(camera.time, 500)
+                    listItem.yaw.setTime(camera.time, 500)
+                    listItem.pitch.setTime(camera.time, 500)
+                }
+                newGameEntityList.set(pos.uuid, listItem)
+                listItem.x.setEndValue(camera.time, pos.x)
+                listItem.y.setEndValue(camera.time, pos.y)
+                listItem.z.setEndValue(camera.time, pos.z)
+                if (pos.yaw) {
+                    listItem.yaw.setEndValue(camera.time, pos.yaw)
+                }
+                if (pos.pitch) {
+                    listItem.pitch.setEndValue(camera.time, pos.pitch)
+                }
             }
+        }
+        this.gameEntityList.value = newGameEntityList;
+        //自动缩放和居中
+        if (camera.autoZoon.tempValue) {
+            camera.autoZoonFun(this);
+            //自动居中
+            camera.position.x.setEndValue(
+                camera.time,
+                this.x.min + (this.x.max - this.x.min) / 2,
+            );
+            camera.position.y.setEndValue(
+                camera.time,
+                this.y.min + (this.y.max - this.y.min) / 2,
+            );
         }
     }
 }
@@ -97,5 +139,5 @@ export class MapData {
 interface UIPosList {
     list: Array<PosData>;
     type: string;
-    color: string;
+    name: string
 }

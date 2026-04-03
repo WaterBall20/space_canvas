@@ -1,9 +1,9 @@
-import { AnimationValue } from "../animation/value";
-import type { MapData, PosData } from "../data/mapData";
+import {AnimationValue} from "../animation/value";
+import type {MapData} from "../data/mapData";
 
 //相机参数
 
-export const maxZoon = 111320;
+export const maxZoon = 111_320;
 
 export class Camera {
     time = 0;
@@ -13,44 +13,56 @@ export class Camera {
     };
     zoom = new AnimationValue();
     dpr = 1;
-    autoZoon = true;
-    canvas : HTMLCanvasElement | undefined
+    autoZoon = {
+        value: true,
+        tempValue: true,
+        event: false,
+        eventTime: 0,
+    };
+    canvas: HTMLCanvasElement | undefined
 
     /**
      * 自动缩放
      */
     public autoZoonFun(mapData: MapData) {
         //迭代所有重置最值
-
         let minX = Number.MAX_SAFE_INTEGER;
         let maxX = Number.MIN_SAFE_INTEGER;
         let minY = Number.MAX_SAFE_INTEGER;
         let maxY = Number.MIN_SAFE_INTEGER;
         let count = 0; //计算次数
 
-        //判断并更新地图统计数据
-        function mapMaxMin(pos: PosData) {
-            if (pos.x > maxX) {
-                maxX = pos.x;
-            }
-            if (pos.x < minX) {
-                minX = pos.x;
-            }
-            if (pos.y > maxY) {
-                maxY = pos.y;
-            }
-            if (pos.y < minY) {
-                minY = pos.y;
-            }
-            count++;
-        }
         for (let posList of mapData.list.value.values()) {
             for (let pos of posList.list) {
-                mapMaxMin(pos);
+                if (pos.x > maxX) {
+                    maxX = pos.x;
+                }
+                if (pos.x < minX) {
+                    minX = pos.x;
+                }
+                if (pos.y > maxY) {
+                    maxY = pos.y;
+                }
+                if (pos.y < minY) {
+                    minY = pos.y;
+                }
+                count++;
             }
         }
         for (let pos of mapData.gameEntityList.value.values()) {
-            mapMaxMin(pos);
+            if (pos.x.getEndValue() > maxX) {
+                maxX = pos.x.getEndValue();
+            }
+            if (pos.x.getEndValue() < minX) {
+                minX = pos.x.getEndValue();
+            }
+            if (pos.y.getEndValue() > maxY) {
+                maxY = pos.y.getEndValue();
+            }
+            if (pos.y.getEndValue() < minY) {
+                minY = pos.y.getEndValue();
+            }
+            count++;
         }
         if (count > 1) {
             mapData.x.max = maxX;
@@ -105,7 +117,7 @@ export class Camera {
         let x = canvas.width / 2 + cxZoom;
         let y = canvas.height / 2 + cyZoom;
 
-        return { x, y };
+        return {x, y};
     }
 
     /**
@@ -134,6 +146,6 @@ export class Camera {
         let x = this.position.x.getValue(time) + cxNoZoom;
         let y = this.position.y.getValue(time) + cyNoZoom;
 
-        return { x, y };
+        return {x, y};
     }
 }
