@@ -29,6 +29,7 @@ export function render(
     mousePos: { x: number; y: number },
     mapData: MapData,
 ) {
+
     /**
      * 绘制圆点
      * @param x 画布坐标X

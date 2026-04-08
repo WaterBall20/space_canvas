@@ -20,7 +20,7 @@ const autoZoomBtnRef = ref<HTMLButtonElement | null>(null);
 const mapData = new MapData();
 const camera = new Camera();
 
-const wsClient = new WSClient("ws://192.168.43.85:4101"); // 服务端地址
+const wsClient = new WSClient("ws://localhost:4101"); // 服务端地址
 
 wsClient.onMessage((posList) => mapData.updatePos(posList, camera));
 
@@ -59,14 +59,12 @@ onMounted(() => {
         );
         //按下
         window.addEventListener("mousedown", (e) => {
-              camera.autoZoon.event = true;
-              handlePointerDown(e.x * camera.dpr, e.y * camera.dpr)
+              handlePointerDown(camera,e.x * camera.dpr, e.y * camera.dpr)
             },
         );
         //抬起
         window.addEventListener("mouseup", () => {
-          camera.autoZoon.event = false;
-          handlePointerUp()
+          handlePointerUp(camera)
         });
         //滚轮
         window.addEventListener("wheel", (e) => onWheel(camera, canvas, e));
@@ -75,7 +73,6 @@ onMounted(() => {
       function windowTouch() {
         //按下
         window.addEventListener("touchstart", (e) => {
-          camera.autoZoon.event = true;
           TouchStart(camera, e)
         }, {
           passive: false,
@@ -84,7 +81,6 @@ onMounted(() => {
         window.addEventListener(
             "touchmove",
             (e) => {
-              camera.autoZoon.event = true;
               TouchMove(camera, canvas, e)
             },
             {passive: false},
@@ -95,8 +91,7 @@ onMounted(() => {
             (e) => {
               e.preventDefault();
               if (e.touches.length == 0) {
-                camera.autoZoon.event = false;
-                handlePointerUp();
+                handlePointerUp(camera);
               }
             },
             {passive: false},

@@ -3,8 +3,8 @@ import type { PosData } from "../data/mapData";
 
 export class WSClient {
     private ws: WebSocket | null = null;
-    private url: string;
-    private reconnectInterval: number;
+    private readonly url: string;
+    private readonly reconnectInterval: number;
     private onMessageCallback: ((data: Array<PosData>) => void) | null = null;
 
     constructor(url: string, reconnectInterval = 3000) {
