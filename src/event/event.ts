@@ -10,7 +10,8 @@ export const mousePos = {
 let isPointerDown = false;
 
 ///按下
-export function handlePointerDown(x: number, y: number) {
+export function handlePointerDown(camera: Camera,x: number, y: number) {
+    camera.autoZoon.event = true;
     isPointerDown = true;
     mousePos.x = x;
     mousePos.y = y;
@@ -43,7 +44,8 @@ export function handlePointerMove(camera: Camera, x: number, y: number) {
 }
 
 //松开
-export function handlePointerUp() {
+export function handlePointerUp(camera: Camera) {
+    camera.autoZoon.event = false;
     isPointerDown = false;
 }
 
@@ -53,6 +55,8 @@ export function onWheel(
     canvas: HTMLCanvasElement,
     e: WheelEvent,
 ) {
+    camera.autoZoon.tempValue = false;
+    camera.autoZoon.eventTime = camera.time;
     //立刻目标值
     let mousePos = camera.canvasPosToMapPos(
         canvas,
@@ -136,10 +140,12 @@ export function TouchStart(camera: Camera, e: TouchEvent) {
     if (e.touches.length == 1) {
         let touch = e.touches[0];
         handlePointerDown(
+            camera,
             touch.clientX * camera.dpr,
             touch.clientY * camera.dpr,
         );
     } else {
+        camera.autoZoon.event = true;
         let cPos = getTouchC(camera, e);
         lastTouchCPos = cPos;
         mousePos.x = cPos.x;
@@ -173,6 +179,7 @@ export function TouchMove(
         );
     } else {
         //移动
+        camera.autoZoon.event = true;
         let cPos = getTouchC(camera, e);
         let xm = cPos.x - lastTouchCPos.x;
         let ym = cPos.y - lastTouchCPos.y;

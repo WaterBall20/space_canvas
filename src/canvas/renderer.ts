@@ -29,6 +29,7 @@ export function render(
     mousePos: { x: number; y: number },
     mapData: MapData,
 ) {
+
     /**
      * 绘制圆点
      * @param x 画布坐标X
@@ -341,7 +342,7 @@ export function render(
         }
     }
     //debug信息
-        let debug = false;
+        let debug = true;
     if (debug) {
         ctx.textAlign = "left";
         ctx.textBaseline = "bottom";
@@ -373,7 +374,7 @@ export function render(
             0,
             canvas.height,
             fontS,
-            "#888"
+            "#eee"
         )
     }
     //wsClient.send("renderEnd");

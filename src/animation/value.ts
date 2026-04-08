@@ -40,7 +40,7 @@ export class AnimationValue {
     public getValue(time: number): number {
         //估值
         let endTime = this.startTime + this.time;
-        let t = 0;
+        let t;
         if (time > endTime) {
             t = 1;
         } else {
