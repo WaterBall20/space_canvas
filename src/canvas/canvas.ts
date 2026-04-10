@@ -15,6 +15,7 @@ export class Camera {
     dpr = 1;
     autoZoon = {
         value: true,
+        mod: 0,
         tempValue: true,
         event: false,
         eventTime: 0,
@@ -30,25 +31,14 @@ export class Camera {
         let maxX = Number.MIN_SAFE_INTEGER;
         let minY = Number.MAX_SAFE_INTEGER;
         let maxY = Number.MIN_SAFE_INTEGER;
+        //显示用
+        let dMinX;
+        let dMaxX;
+        let dMinY;
+        let dMaxY;
+        let type;
         let count = 0; //计算次数
 
-        for (let posList of mapData.list.value.values()) {
-            for (let pos of posList.list) {
-                if (pos.x > maxX) {
-                    maxX = pos.x;
-                }
-                if (pos.x < minX) {
-                    minX = pos.x;
-                }
-                if (pos.y > maxY) {
-                    maxY = pos.y;
-                }
-                if (pos.y < minY) {
-                    minY = pos.y;
-                }
-                count++;
-            }
-        }
         for (let pos of mapData.gameEntityList.value.values()) {
             if (pos.x.getEndValue() > maxX) {
                 maxX = pos.x.getEndValue();
@@ -64,31 +54,91 @@ export class Camera {
             }
             count++;
         }
+        dMinX = minX;
+        dMaxX = maxX;
+        dMinY = minY;
+        dMaxY = maxY;
+        for (let posList of mapData.list.value.values()) {
+            let i = 0;
+            for (let pos of posList.list) {
+                if (pos.x > maxX) {
+                    maxX = pos.x;
+                }
+                if (pos.x < minX) {
+                    minX = pos.x;
+                }
+                if (pos.y > maxY) {
+                    maxY = pos.y;
+                }
+                if (pos.y < minY) {
+                    minY = pos.y;
+                }
+                count++;
+                i++;
+                //参考最后
+                if (i == posList.list.length) {
+                    if (pos.x > dMaxX) {
+                        dMaxX = pos.x;
+                    }
+                    if (pos.x < dMinX) {
+                        dMinX = pos.x;
+                    }
+                    if (pos.y > dMaxY) {
+                        dMaxY = pos.y;
+                    }
+                    if (pos.y < dMinY) {
+                        dMinY = pos.y;
+                    }
+                    type = pos.type;
+                }
+            }
+        }
+        //若自动缩放是总览
+        if (this.autoZoon.mod == 0) {
+            dMinX = minX;
+            dMaxX = maxX;
+            dMinY = minY;
+            dMaxY = maxY;
+        }
         if (count > 1) {
             mapData.x.max = maxX;
             mapData.x.min = minX;
             mapData.y.max = maxY;
             mapData.y.min = minY;
-            //地图有效宽度和高度
-            let mapW = mapData.x.max - mapData.x.min;
-            let mapH = mapData.y.max - mapData.y.min;
-            if (mapW || mapH) {
+            //显示的地图宽度和高度
+            let dMapW = dMaxX - dMinX;
+            let dMapH = dMaxY - dMinY;
+            //尝试设置更新最值
+            if (dMapW || dMapH) {
                 let c = this.canvas!;
                 //宽度和高度缩放
-                let wZoon = c.width / mapW / 1.1;
-                let hZoon = c.height / mapH / 1.1;
+                let wZoom = c.width / dMapW / 1.1;
+                let hZoom = c.height / dMapH / 1.1;
                 let zoon;
                 //取最小缩放，以完全显示
-                if (wZoon < hZoon) {
-                    zoon = wZoon;
+                if (wZoom < hZoom) {
+                    zoon = wZoom;
                 } else {
-                    zoon = hZoon;
+                    zoon = hZoom;
                 }
                 if (zoon > maxZoon) zoon = maxZoon;
                 this.zoom.setEndValue(this.time, zoon);
             } else {
-                this.zoom.setEndValue(this.time, maxZoon);
+                if (type == "") {
+                    this.zoom.setEndValue(this.time, maxZoon);
+                } else {
+                    this.zoom.setEndValue(this.time, 100)
+                }
             }
+            //自动居中
+            this.position.x.setEndValue(
+                this.time,
+                dMinX + (dMaxX - dMinX) / 2,
+            );
+            this.position.y.setEndValue(
+                this.time,
+                dMinY + (dMaxY - dMinY) / 2,
+            );
         }
     }
 

@@ -50,7 +50,7 @@ export function handlePointerUp(camera: Camera) {
 }
 
 //滚轮
-export function onWheel(
+export function wheel(
     camera: Camera,
     canvas: HTMLCanvasElement,
     e: WheelEvent,
@@ -135,8 +135,7 @@ function getDistance(x1: number, y1: number, x2: number, y2: number) {
     return Math.abs(Math.sqrt(xx * xx + yy * yy));
 }
 
-export function TouchStart(camera: Camera, e: TouchEvent) {
-    e.preventDefault();
+export function pointerDown(camera: Camera, e: TouchEvent) {
     if (e.touches.length == 1) {
         let touch = e.touches[0];
         handlePointerDown(
@@ -160,12 +159,11 @@ export function TouchStart(camera: Camera, e: TouchEvent) {
     lastTouchCount = e.touches.length;
 }
 
-export function TouchMove(
+export function pointerMove(
     camera: Camera,
     canvas: HTMLCanvasElement,
     e: TouchEvent,
 ) {
-    e.preventDefault();
     if (e.touches.length == 1) {
         let touch = e.touches[0];
         if (lastTouchCount > 1) {

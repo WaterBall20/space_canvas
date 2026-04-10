@@ -20,6 +20,8 @@ let lastTime = 0;
  * @param camera 相机参数
  * @param mousePos 鼠标坐标
  * @param mapData 地图数据
+ * @param zoomMod1 总览
+ * @param zoomMod2 跟踪
  */
 export function render(
     time: number,
@@ -28,6 +30,8 @@ export function render(
     camera: Camera,
     mousePos: { x: number; y: number },
     mapData: MapData,
+    zoomMod1: HTMLInputElement,
+    zoomMod2: HTMLInputElement,
 ) {
 
     /**
@@ -108,6 +112,12 @@ export function render(
     let thisListTime = time - lastTime;
     lastTime = time;
     camera.time = time;
+    if (zoomMod1.checked) {
+        camera.autoZoon.mod = 0;
+    } else if (zoomMod2.checked) {
+        camera.autoZoon.mod = 1;
+    }
+
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     //线大小
@@ -342,7 +352,7 @@ export function render(
         }
     }
     //debug信息
-        let debug = true;
+        let debug = false;
     if (debug) {
         ctx.textAlign = "left";
         ctx.textBaseline = "bottom";
@@ -370,6 +380,8 @@ export function render(
                 tempValue: ${camera.autoZoon.tempValue}
                 eventTime: ${camera.autoZoon.eventTime}ms
             dpr: ${camera.dpr}
+        zoomMod1: checked: ${zoomMod1.checked}
+        zoomMod2: checked: ${zoomMod2.checked}
             `,
             0,
             canvas.height,

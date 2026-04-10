@@ -101,11 +101,8 @@ export class MapData {
                         yaw: new AnimationValue(),
                         pitch: new AnimationValue()
                     }
-                    listItem.x.setTime(camera.time, 500).setEndValue(0, pos.x).toEndValue()
-                    listItem.y.setTime(camera.time, 500).setEndValue(0, pos.y).toEndValue()
-                    listItem.z.setTime(camera.time, 500)
-                    listItem.yaw.setTime(camera.time, 500)
-                    listItem.pitch.setTime(camera.time, 500)
+                    listItem.x.setEndValue(0, pos.x).toEndValue()
+                    listItem.y.setEndValue(0, pos.y).toEndValue()
                 }
                 newGameEntityList.set(pos.uuid, listItem)
                 listItem.x.setEndValue(camera.time, pos.x)
@@ -123,15 +120,6 @@ export class MapData {
         //自动缩放和居中
         if (camera.autoZoon.tempValue) {
             camera.autoZoonFun(this);
-            //自动居中
-            camera.position.x.setEndValue(
-                camera.time,
-                this.x.min + (this.x.max - this.x.min) / 2,
-            );
-            camera.position.y.setEndValue(
-                camera.time,
-                this.y.min + (this.y.max - this.y.min) / 2,
-            );
         }
     }
 }
