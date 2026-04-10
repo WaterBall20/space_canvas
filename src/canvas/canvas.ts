@@ -61,33 +61,33 @@ export class Camera {
         for (let posList of mapData.list.value.values()) {
             let i = 0;
             for (let pos of posList.list) {
-                if (pos.x > maxX) {
-                    maxX = pos.x;
+                if (pos.x.getEndValue() > maxX) {
+                    maxX = pos.x.getEndValue();
                 }
-                if (pos.x < minX) {
-                    minX = pos.x;
+                if (pos.x.getEndValue() < minX) {
+                    minX = pos.x.getEndValue();
                 }
-                if (pos.y > maxY) {
-                    maxY = pos.y;
+                if (pos.y.getEndValue() > maxY) {
+                    maxY = pos.y.getEndValue();
                 }
-                if (pos.y < minY) {
-                    minY = pos.y;
+                if (pos.y.getEndValue() < minY) {
+                    minY = pos.y.getEndValue();
                 }
                 count++;
                 i++;
                 //参考最后
                 if (i == posList.list.length) {
-                    if (pos.x > dMaxX) {
-                        dMaxX = pos.x;
+                    if (pos.x.getEndValue() > dMaxX) {
+                        dMaxX = pos.x.getEndValue();
                     }
-                    if (pos.x < dMinX) {
-                        dMinX = pos.x;
+                    if (pos.x.getEndValue() < dMinX) {
+                        dMinX = pos.x.getEndValue();
                     }
-                    if (pos.y > dMaxY) {
-                        dMaxY = pos.y;
+                    if (pos.y.getEndValue() > dMaxY) {
+                        dMaxY = pos.y.getEndValue();
                     }
-                    if (pos.y < dMinY) {
-                        dMinY = pos.y;
+                    if (pos.y.getEndValue() < dMinY) {
+                        dMinY = pos.y.getEndValue();
                     }
                     type = pos.type;
                 }

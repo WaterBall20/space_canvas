@@ -1,4 +1,4 @@
-import type {MapData, PosData} from "../data/mapData";
+import type {UIPos, MapData} from "../data/mapData";
 import type {Camera} from "./canvas";
 
 export function startRenderLoop(render: (time: number) => void) {
@@ -273,7 +273,7 @@ export function render(
     for (let posList of mapData.list.value.values()) {
         for (let i = 0; i < posList.list.length; i++) {
             let posData = posList.list[i];
-            let cPos = camera.mapPosToCanvasPos(canvas, posData.x, posData.y);
+            let cPos = camera.mapPosToCanvasPos(canvas, posData.x.getValue(time), posData.y.getValue(time));
             //可视检查
             let cPosIsDraw =
                 cPos.x + rs > 0 &&
@@ -288,7 +288,7 @@ export function render(
                 if (i + 1 == posList.list.length) {
                     ctx.textAlign = "center";
                     ctx.textBaseline = "top";
-                    let text = `(${posData.x}, ${posData.y})`;
+                    let text = `(${posData.x.getEndValue()}, ${posData.y.getEndValue()})`;
                     if (posData.name) {
                         text = posData.name + "\n" + text;
                     }
@@ -306,11 +306,11 @@ export function render(
                 }
             }
             if (i > 0) {
-                let lastPos: PosData = posList.list[i - 1];
+                let lastPos: UIPos = posList.list[i - 1];
                 let cLastPos = camera.mapPosToCanvasPos(
                     canvas,
-                    lastPos.x,
-                    lastPos.y,
+                    lastPos.x.getValue(time),
+                    lastPos.y.getValue(time),
                 );
                 if (
                     cPosIsDraw ||

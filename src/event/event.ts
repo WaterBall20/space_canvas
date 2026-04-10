@@ -26,15 +26,15 @@ export function handlePointerMove(camera: Camera, x: number, y: number) {
         camera.position.x
             .setEndValue(
                 camera.time,
-                camera.position.x.getEndValue() -
-                thisLastX / camera.zoom.getEndValue(),
+                camera.position.x.getValue(camera.time) -
+                thisLastX / camera.zoom.getValue(camera.time),
             )
             .toEndValue();
         camera.position.y
             .setEndValue(
                 camera.time,
-                camera.position.y.getEndValue() -
-                thisLastY / camera.zoom.getEndValue(),
+                camera.position.y.getValue(camera.time) -
+                thisLastY / camera.zoom.getValue(camera.time),
             )
             .toEndValue();
     }
@@ -66,14 +66,14 @@ export function wheel(
     //缩放处理
     let scale = 1.1;
     if (e.deltaY < 0) {
-        let newZoom = camera.zoom.getEndValue() * scale;
+        let newZoom = camera.zoom.getValue(camera.time) * scale;
         if (newZoom > maxZoon) {
             newZoom = maxZoon;
         }
         camera.zoom.setEndValue(camera.time, newZoom).toEndValue();
     } else {
         camera.zoom
-            .setEndValue(camera.time, camera.zoom.getEndValue() / scale)
+            .setEndValue(camera.time, camera.zoom.getValue(camera.time) / scale)
             .toEndValue();
     }
 
@@ -87,10 +87,10 @@ export function wheel(
     let nOCaPosX = mousePos.x - newMousePos.x;
     let nOCaPosY = mousePos.y - newMousePos.y;
     camera.position.x
-        .setEndValue(camera.time, camera.position.x.getEndValue() + nOCaPosX)
+        .setEndValue(camera.time, camera.position.x.getValue(camera.time) + nOCaPosX)
         .toEndValue();
     camera.position.y
-        .setEndValue(camera.time, camera.position.y.getEndValue() + nOCaPosY)
+        .setEndValue(camera.time, camera.position.y.getValue(camera.time) + nOCaPosY)
         .toEndValue();
 }
 
@@ -184,15 +184,15 @@ export function pointerMove(
         camera.position.x
             .setEndValue(
                 camera.time,
-                camera.position.x.getEndValue() -
-                xm / camera.zoom.getEndValue(),
+                camera.position.x.getValue(camera.time) -
+                xm / camera.zoom.getValue(camera.time),
             )
             .toEndValue();
         camera.position.y
             .setEndValue(
                 camera.time,
-                camera.position.y.getEndValue() -
-                ym / camera.zoom.getEndValue(),
+                camera.position.y.getValue(camera.time) -
+                ym / camera.zoom.getValue(camera.time),
             )
             .toEndValue();
         mousePos.x = cPos.x;
@@ -209,20 +209,20 @@ export function pointerMove(
         let d = getDistance(x1, y1, x2, y2);
         let dd = d / lastTouchD;
         camera.zoom
-            .setEndValue(camera.time, camera.zoom.getEndValue() * dd)
+            .setEndValue(camera.time, camera.zoom.getValue(camera.time) * dd)
             .toEndValue();
         lastTouchD = d;
         let newCMapPos = camera.canvasPosToMapPos(canvas, cPos.x, cPos.y);
         camera.position.x
             .setEndValue(
                 camera.time,
-                camera.position.x.getEndValue() + (cMapPos.x - newCMapPos.x),
+                camera.position.x.getValue(camera.time) + (cMapPos.x - newCMapPos.x),
             )
             .toEndValue();
         camera.position.y
             .setEndValue(
                 camera.time,
-                camera.position.y.getEndValue() + (cMapPos.y - newCMapPos.y),
+                camera.position.y.getValue(camera.time) + (cMapPos.y - newCMapPos.y),
             )
             .toEndValue();
     }

@@ -1,6 +1,6 @@
 import {DecelerateInterpolator, type Interpolator,} from "./Interpolator";
 
-const ANIMATION_TIME = 1000
+const ANIMATION_TIME = 500
 
 export class AnimationValue {
     private startValue = 0;
