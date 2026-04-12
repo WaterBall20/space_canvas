@@ -1,5 +1,5 @@
 import {AnimationValue} from "../animation/value";
-import type {MapData} from "../data/mapData";
+import type {MapData, UIPos} from "../data/mapData";
 
 //相机参数
 
@@ -39,7 +39,7 @@ export class Camera {
         let type;
         let count = 0; //计算次数
 
-        for (let pos of mapData.gameEntityList.value.values()) {
+        function minMaxValue(pos: UIPos) {
             if (pos.x.getEndValue() > maxX) {
                 maxX = pos.x.getEndValue();
             }
@@ -54,6 +54,10 @@ export class Camera {
             }
             count++;
         }
+
+        for (let pos of mapData.gameEntityList.value.values()) {
+            minMaxValue(pos)
+        }
         dMinX = minX;
         dMaxX = maxX;
         dMinY = minY;
@@ -61,19 +65,7 @@ export class Camera {
         for (let posList of mapData.list.value.values()) {
             let i = 0;
             for (let pos of posList.list) {
-                if (pos.x.getEndValue() > maxX) {
-                    maxX = pos.x.getEndValue();
-                }
-                if (pos.x.getEndValue() < minX) {
-                    minX = pos.x.getEndValue();
-                }
-                if (pos.y.getEndValue() > maxY) {
-                    maxY = pos.y.getEndValue();
-                }
-                if (pos.y.getEndValue() < minY) {
-                    minY = pos.y.getEndValue();
-                }
-                count++;
+                minMaxValue(pos)
                 i++;
                 //参考最后
                 if (i == posList.list.length) {
