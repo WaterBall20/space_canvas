@@ -1,5 +1,5 @@
-import type {Camera} from "../canvas/canvas";
-import {AnimationValue} from "../animation/value.ts";
+import type { Camera } from "../canvas/canvas";
+import { AnimationValue } from "../animation/value.ts";
 
 // websocketClient.ts
 export interface PosData {
@@ -45,8 +45,7 @@ export class MapData {
         value: new Map<string, UIPos>(),
     };
 
-    constructor() {
-    }
+    constructor() {}
 
     public updatePos(posList: Array<PosData>, camera: Camera) {
         let newGameEntityList = new Map<string, UIPos>();
@@ -58,7 +57,7 @@ export class MapData {
                     posList = {
                         list: [],
                         type: pos.type,
-                        name: pos.name
+                        name: pos.name,
                     };
                     this.list.value.set(pos.uuid, posList);
                     this.list.len++;
@@ -86,11 +85,15 @@ export class MapData {
                         z: new AnimationValue(),
                         yaw: new AnimationValue(),
                         pitch: new AnimationValue(),
-                    }
+                    };
                     //动画处理
                     if (endPos) {
-                        uiPos.x.setEndValue(0, endPos.x.getValue(camera.time)).toEndValue()
-                        uiPos.y.setEndValue(0, endPos.y.getValue(camera.time)).toEndValue()
+                        uiPos.x
+                            .setEndValue(0, endPos.x.getValue(camera.time))
+                            .toEndValue();
+                        uiPos.y
+                            .setEndValue(0, endPos.y.getValue(camera.time))
+                            .toEndValue();
                         // uiPos.z.setEndValue(0, endPos.z.getValue(camera.time)).toEndValue()
                         // uiPos.yaw.setEndValue(0, endPos.yaw.getValue(camera.time)).toEndValue()
                         // uiPos.pitch.setEndValue(0, endPos.pitch.getValue(camera.time)).toEndValue()
@@ -118,21 +121,20 @@ export class MapData {
                         y: new AnimationValue(),
                         z: new AnimationValue(),
                         yaw: new AnimationValue(),
-                        pitch: new AnimationValue()
-                    }
+                        pitch: new AnimationValue(),
+                    };
                     listItem.x.setEndValue(0, pos.x).toEndValue();
                     listItem.y.setEndValue(0, pos.y).toEndValue();
                     // listItem.z.setEndValue(0, pos.z).toEndValue();
                     // if (pos.yaw) listItem.yaw.setEndValue(0, pos.yaw).toEndValue();
                     // if (pos.pitch) listItem.pitch.setEndValue(0, pos.pitch).toEndValue();
                 }
-                newGameEntityList.set(pos.uuid, listItem)
-                listItem.x.setEndValue(camera.time, pos.x)
-                listItem.y.setEndValue(camera.time, pos.y)
+                newGameEntityList.set(pos.uuid, listItem);
+                listItem.x.setEndValue(camera.time, pos.x);
+                listItem.y.setEndValue(camera.time, pos.y);
                 // listItem.z.setEndValue(camera.time, pos.z)
                 // if (pos.yaw) listItem.yaw.setEndValue(camera.time, pos.yaw)
                 // if (pos.pitch) listItem.pitch.setEndValue(camera.time, pos.pitch)
-
             }
         }
         this.gameEntityList.value = newGameEntityList;
@@ -146,5 +148,5 @@ export class MapData {
 interface UIPosList {
     list: Array<UIPos>;
     type: string;
-    name: string
+    name: string;
 }

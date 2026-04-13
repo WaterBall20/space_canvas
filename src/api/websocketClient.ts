@@ -1,6 +1,5 @@
 import type { PosData } from "../data/mapData";
 
-
 export class WSClient {
     private ws: WebSocket | null = null;
     private readonly url: string;

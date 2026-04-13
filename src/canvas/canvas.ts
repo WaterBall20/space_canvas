@@ -1,5 +1,5 @@
-import {AnimationValue} from "../animation/value";
-import type {MapData, UIPos} from "../data/mapData";
+import { AnimationValue } from "../animation/value";
+import type { MapData, UIPos } from "../data/mapData";
 
 //相机参数
 
@@ -20,7 +20,7 @@ export class Camera {
         event: false,
         eventTime: 0,
     };
-    canvas: HTMLCanvasElement | undefined
+    canvas: HTMLCanvasElement | undefined;
 
     /**
      * 自动缩放
@@ -56,7 +56,7 @@ export class Camera {
         }
 
         for (let pos of mapData.gameEntityList.value.values()) {
-            minMaxValue(pos)
+            minMaxValue(pos);
         }
         dMinX = minX;
         dMaxX = maxX;
@@ -65,7 +65,7 @@ export class Camera {
         for (let posList of mapData.list.value.values()) {
             let i = 0;
             for (let pos of posList.list) {
-                minMaxValue(pos)
+                minMaxValue(pos);
                 i++;
                 //参考最后
                 if (i == posList.list.length) {
@@ -119,18 +119,12 @@ export class Camera {
                 if (type == "") {
                     this.zoom.setEndValue(this.time, maxZoon);
                 } else {
-                    this.zoom.setEndValue(this.time, 100)
+                    this.zoom.setEndValue(this.time, 100);
                 }
             }
             //自动居中
-            this.position.x.setEndValue(
-                this.time,
-                dMinX + (dMaxX - dMinX) / 2,
-            );
-            this.position.y.setEndValue(
-                this.time,
-                dMinY + (dMaxY - dMinY) / 2,
-            );
+            this.position.x.setEndValue(this.time, dMinX + (dMaxX - dMinX) / 2);
+            this.position.y.setEndValue(this.time, dMinY + (dMaxY - dMinY) / 2);
         }
     }
 
@@ -159,7 +153,7 @@ export class Camera {
         let x = canvas.width / 2 + cxZoom;
         let y = canvas.height / 2 + cyZoom;
 
-        return {x, y};
+        return { x, y };
     }
 
     /**
@@ -188,6 +182,6 @@ export class Camera {
         let x = this.position.x.getValue(time) + cxNoZoom;
         let y = this.position.y.getValue(time) + cyNoZoom;
 
-        return {x, y};
+        return { x, y };
     }
 }

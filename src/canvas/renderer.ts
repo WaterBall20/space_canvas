@@ -1,5 +1,5 @@
-import type {MapData, UIPos} from "../data/mapData";
-import type {Camera} from "./canvas";
+import type { MapData, UIPos } from "../data/mapData";
+import type { Camera } from "./canvas";
 
 export function startRenderLoop(render: (time: number) => void) {
     function loop(time: number) {
@@ -33,7 +33,6 @@ export function render(
     zoomMod1: HTMLInputElement,
     zoomMod2: HTMLInputElement,
 ) {
-
     /**
      * 绘制圆点
      * @param x 画布坐标X
@@ -100,7 +99,11 @@ export function render(
                     ctx.fillText(line, x, y + index * lineHeight);
                     break;
                 case "bottom":
-                    ctx.fillText(line, x, y - (lines.length - 1 - index) * lineHeight);
+                    ctx.fillText(
+                        line,
+                        x,
+                        y - (lines.length - 1 - index) * lineHeight,
+                    );
                     break;
                 default:
                     ctx.fillText("警告：使用暂不支持的对其方式", x, y);
@@ -209,9 +212,8 @@ export function render(
         //亮度
         const lightness = 55;
 
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
-
 
     //相机参数更新
     if (camera.autoZoon.event) {
@@ -219,7 +221,10 @@ export function render(
         camera.autoZoon.tempValue = false;
     }
     //自动缩放恢复
-    if (camera.autoZoon.tempValue != camera.autoZoon.value && time - camera.autoZoon.eventTime > 5_000) {
+    if (
+        camera.autoZoon.tempValue != camera.autoZoon.value &&
+        time - camera.autoZoon.eventTime > 5_000
+    ) {
         camera.autoZoon.tempValue = camera.autoZoon.value;
     }
 
@@ -229,7 +234,7 @@ export function render(
 
     let gridStart = {
         x: Math.round(canvasStartPos.x / cGS) * cGS,
-        y: Math.round(canvasStartPos.y / cGS) * cGS
+        y: Math.round(canvasStartPos.y / cGS) * cGS,
     };
 
     /**
@@ -242,9 +247,16 @@ export function render(
         for (let i = 0; i < xLineCount; i++) {
             let posX = gridStart.x + i * cGS;
             let cPos = camera.mapPosToCanvasPos(canvas, posX, 0);
-            drawLine(cPos.x, 0, cPos.x, canvas.height, s, (ctx.fillStyle = "#f80"));
+            drawLine(
+                cPos.x,
+                0,
+                cPos.x,
+                canvas.height,
+                s,
+                (ctx.fillStyle = "#f80"),
+            );
 
-            let text = fixFloat(posX).toString()
+            let text = fixFloat(posX).toString();
             ctx.textBaseline = "top";
             ctx.fillText(text, cPos.x, 5);
             ctx.textBaseline = "bottom";
@@ -257,9 +269,16 @@ export function render(
         for (let i = 0; i < yLineCount; i++) {
             let posY = gridStart.y + i * cGS;
             let cPos = camera.mapPosToCanvasPos(canvas, 0, posY);
-            drawLine(0, cPos.y, canvas.width, cPos.y, s, (ctx.fillStyle = "#0a0"));
+            drawLine(
+                0,
+                cPos.y,
+                canvas.width,
+                cPos.y,
+                s,
+                (ctx.fillStyle = "#0a0"),
+            );
 
-            let text = fixFloat(posY).toString()
+            let text = fixFloat(posY).toString();
             ctx.textAlign = "left";
             ctx.fillText(text, 5, cPos.y);
             ctx.textAlign = "right";
@@ -272,31 +291,35 @@ export function render(
      * @param cPos 画布坐标
      * @param color 颜色
      */
-    function drawMiniGrid(cPos: { x: number, y: number }, color: string) {
+    function drawMiniGrid(cPos: { x: number; y: number }, color: string) {
         const miniCGCount = 10;
         const miniCGS = cGS / miniCGCount;
         const mapPos = camera.canvasPosToMapPos(canvas, cPos.x, cPos.y);
         const d = {
             x: mapPos.x - gridStart.x,
-            y: mapPos.y - gridStart.y
-        }
+            y: mapPos.y - gridStart.y,
+        };
         const startPos = {
             x: gridStart.x + Math.round(d.x / cGS - 0.5) * cGS,
             y: gridStart.y + Math.round(d.y / cGS - 0.5) * cGS,
-        }
+        };
         const endPos = {
             x: startPos.x + cGS,
-            y: startPos.y + cGS
-        }
-        const startCPos = camera.mapPosToCanvasPos(canvas, startPos.x, startPos.y)
-        const endCPos = camera.mapPosToCanvasPos(canvas, endPos.x, endPos.y)
+            y: startPos.y + cGS,
+        };
+        const startCPos = camera.mapPosToCanvasPos(
+            canvas,
+            startPos.x,
+            startPos.y,
+        );
+        const endCPos = camera.mapPosToCanvasPos(canvas, endPos.x, endPos.y);
 
         for (let i = 1; i < miniCGCount; i++) {
             let posX = startPos.x + i * miniCGS;
             let posY = startPos.y + i * miniCGS;
-            let cPos2 = camera.mapPosToCanvasPos(canvas, posX, posY)
-            drawLine(cPos2.x, startCPos.y, cPos2.x, endCPos.y, s, color)
-            drawLine(startCPos.x, cPos2.y, endCPos.x, cPos2.y, s, color)
+            let cPos2 = camera.mapPosToCanvasPos(canvas, posX, posY);
+            drawLine(cPos2.x, startCPos.y, cPos2.x, endCPos.y, s, color);
+            drawLine(startCPos.x, cPos2.y, endCPos.x, cPos2.y, s, color);
         }
     }
 
@@ -313,12 +336,16 @@ export function render(
     ctx.textAlign = "left";
     ctx.fillText(mouseMapPos.y.toString(), 5, mousePos.y);
     drawLine(5, mousePos.y, canvas.width, mousePos.y, 1, ctx.fillStyle);
-    drawMiniGrid(mousePos, ctx.fillStyle)
+    drawMiniGrid(mousePos, ctx.fillStyle);
 
     let rs = 5;
 
     function getCPos(posData: UIPos) {
-        let cPos = camera.mapPosToCanvasPos(canvas, posData.x.getValue(time), posData.y.getValue(time));
+        let cPos = camera.mapPosToCanvasPos(
+            canvas,
+            posData.x.getValue(time),
+            posData.y.getValue(time),
+        );
         //可视检查
         let isDraw =
             cPos.x + rs > 0 &&
@@ -328,17 +355,17 @@ export function render(
         return {
             x: cPos.x,
             y: cPos.y,
-            isDraw
-        }
+            isDraw,
+        };
     }
 
     //迭代渲染
     for (let posList of mapData.list.value.values()) {
         for (let i = 0; i < posList.list.length; i++) {
             let posData = posList.list[i];
-            let cPos = getCPos(posData)
+            let cPos = getCPos(posData);
             if (cPos.isDraw) {
-                let color = nameToColor(posData.name)
+                let color = nameToColor(posData.name);
                 drawPoint(cPos.x, cPos.y, rs, color);
                 //最后一个附加文本和坐标线
                 if (i + 1 == posList.list.length) {
@@ -358,8 +385,15 @@ export function render(
                         1,
                         nameToColor(posList.name),
                     );
-                    drawLine(0, cPos.y, canvas.width, cPos.y, 1, nameToColor(posList.name));
-                    drawMiniGrid(cPos, color)
+                    drawLine(
+                        0,
+                        cPos.y,
+                        canvas.width,
+                        cPos.y,
+                        1,
+                        nameToColor(posList.name),
+                    );
+                    drawMiniGrid(cPos, color);
                 }
             }
             if (i > 0) {
@@ -390,9 +424,9 @@ export function render(
     }
     //游戏实体渲染
     for (let posData of mapData.gameEntityList.value.values()) {
-        let cPos = getCPos(posData)
+        let cPos = getCPos(posData);
         if (cPos.isDraw) {
-            let color = nameToColor(posData.name)
+            let color = nameToColor(posData.name);
             drawPoint(cPos.x, cPos.y, rs, color);
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
@@ -438,8 +472,8 @@ export function render(
             0,
             canvas.height,
             fontS,
-            "#eee"
-        )
+            "#eee",
+        );
     }
     //wsClient.send("renderEnd");
 }

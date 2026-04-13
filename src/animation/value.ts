@@ -1,16 +1,16 @@
-import {DecelerateInterpolator, type Interpolator,} from "./Interpolator";
+import { DecelerateInterpolator, type Interpolator } from "./Interpolator";
 
-const ANIMATION_TIME = 500
+const ANIMATION_TIME = 500;
 
 export class AnimationValue {
     private startValue = 0;
     private endValue = 0;
+    private mValue = 0;
     private time = ANIMATION_TIME;
     private startTime = 0;
     private interpolator: Interpolator = new DecelerateInterpolator();
 
-    constructor() {
-    }
+    constructor() {}
 
     public setTime(thisTime: number, value: number): AnimationValue {
         if (this.time != value) {
@@ -18,7 +18,7 @@ export class AnimationValue {
             this.startTime = thisTime;
             this.time = value;
         }
-        return this
+        return this;
     }
 
     public setInterpolator(value: Interpolator): AnimationValue {
@@ -31,6 +31,7 @@ export class AnimationValue {
             this.startValue = this.getValue(time);
             this.endValue = value;
             this.startTime = time;
+            this.mValue = this.endValue - this.startValue;
         }
         return this;
     }
@@ -49,7 +50,7 @@ export class AnimationValue {
             t = (time - this.startTime) / this.time;
         }
         let tV = this.interpolator.getValue(t);
-        return this.startValue + (this.endValue - this.startValue) * tV;
+        return this.startValue + this.mValue * tV;
     }
 
     public toEndValue(): AnimationValue {
