@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { render, startRenderLoop } from "./canvas/renderer";
-import { WSClient } from "./api/websocketClient";
-import { MapData } from "./data/mapData.ts";
-import { Camera, maxZoon } from "./canvas/canvas";
+import { render, startRenderLoop } from "../canvas/renderer.ts";
+import { WSClient } from "../api/websocketClient.ts";
+import { MapData } from "../data/mapData.ts";
+import { Camera, maxZoon } from "../canvas/canvas.ts";
 import {
     handlePointerDown,
     handlePointerMove,
@@ -12,48 +12,23 @@ import {
     pointerDown,
     pointerMove,
     wheel,
-} from "./event/event.ts";
+} from "../event/event.ts";
+const props = defineProps({
+    auto_zoon_mod: String,
+});
+let autoZoonMod = "FitBounds";
 
-const mainMapCanvasRef = ref<HTMLCanvasElement | null>(null);
+const mapCanvasRef = ref<HTMLCanvasElement | null>(null);
 
 const mapData = new MapData();
 const camera = new Camera();
-const UIAutoZoom = ref(true);
-let autoZoomMod = 0;
 
 const wsClient = new WSClient("ws://192.168.43.85:4101"); // 服务端地址
 
 wsClient.onMessage((posList) => mapData.updatePos(posList, camera));
 
-function setAutoZoomMod(mod: number) {
-    autoZoomMod = mod;
-    camera.autoZoon.tempValue = camera.autoZoon.value;
-}
-
-function setAutoZoom() {
-    camera.autoZoon.value = !camera.autoZoon.value;
-    camera.autoZoon.tempValue = camera.autoZoon.value;
-    UIAutoZoom.value = camera.autoZoon.value;
-}
-
-function setZoom(add: boolean) {
-    if (camera.autoZoon.value) {
-        camera.autoZoon.tempValue = false;
-        camera.autoZoon.eventTime = camera.time;
-    }
-    let zoom;
-    if (add) {
-        zoom = camera.zoom.getEndValue() * 1.5;
-    } else {
-        zoom = camera.zoom.getEndValue() / 1.5;
-    }
-    if (zoom > maxZoon) {
-        zoom = maxZoon;
-    }
-    camera.zoom.setEndValue(camera.time, zoom);
-}
 onMounted(() => {
-    const canvas = mainMapCanvasRef.value!;
+    const canvas = mapCanvasRef.value!;
     const ctx = canvas.getContext("2d")!;
 
     function resize() {
@@ -141,6 +116,11 @@ onMounted(() => {
                 );
             }
 
+            function setAutoZoom() {
+                camera.autoZoon.value = !camera.autoZoon.value;
+                camera.autoZoon.tempValue = camera.autoZoon.value;
+            }
+
             //键盘事件
             function windowKey() {
                 //按下
@@ -170,6 +150,43 @@ onMounted(() => {
             windowTouch();
 
             windowKey();
+
+            //缩小缩放
+            function setZoom(add: boolean) {
+                if (camera.autoZoon.value) {
+                    camera.autoZoon.tempValue = false;
+                    camera.autoZoon.eventTime = camera.time;
+                }
+                let zoom;
+                if (add) {
+                    zoom = camera.zoom.getEndValue() * 1.5;
+                } else {
+                    zoom = camera.zoom.getEndValue() / 1.5;
+                }
+                if (zoom > maxZoon) {
+                    zoom = maxZoon;
+                }
+                camera.zoom.setEndValue(camera.time, zoom);
+            }
+
+            /* sumZoomBtnRef.value!.addEventListener("click", (e) => {
+                e.stopPropagation();
+                setZoom(false);
+            });
+            //自动缩放
+            autoZoomBtnRef.value!.addEventListener("click", (e) => {
+                e.stopPropagation();
+                setAutoZoom();
+            });
+            //放大缩放
+            addZoomBtnRef.value!.addEventListener("click", (e) => {
+                e.stopPropagation();
+                setZoom(true);
+            }); */
+        }
+
+        if (props.auto_zoon_mod) {
+            autoZoonMod = props.auto_zoon_mod;
         }
 
         resize();
@@ -183,92 +200,18 @@ onMounted(() => {
     console.log("页面加载完成");
     //启动渲染
     startRenderLoop((time) =>
-        render(time, canvas, ctx, camera, mousePos, mapData, autoZoomMod),
+        render(time, canvas, ctx, camera, mousePos, mapData, autoZoonMod),
     );
 });
 </script>
 
 <template>
     <div class="container">
-        <canvas id="mapCanvas" ref="mainMapCanvasRef"></canvas>
-        <div id="UIDiv">
-            <div id="UIDiv2">
-                <div v-show="camera.autoZoon.value">
-                    自动缩放模式
-                    <input
-                        type="radio"
-                        name="zoomMod"
-                        @change="setAutoZoomMod(0)"
-                        checked
-                    />总览
-                    <input
-                        type="radio"
-                        name="zoomMod"
-                        @change="setAutoZoomMod(1)"
-                    />跟踪
-                </div>
-                <button id="sumZoomButton" @click="setZoom(false)">-</button>
-                <button
-                    id="autoZoomButton"
-                    event-info="up"
-                    :value="UIAutoZoom.toString()"
-                    @click="setAutoZoom()"
-                >
-                    自动缩放(Z)
-                </button>
-                <button id="addZoomButton" @click="setZoom(true)">+</button>
-            </div>
-            <div id="lDiv"></div>
-        </div>
+        <canvas id="mapCanvas" ref="mapCanvasRef"></canvas>
     </div>
 </template>
 
 <style>
-button {
-    all: unset;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 8px;
-    background-color: #8888;
-}
-
-#autoZoomButton[event-info="down"] {
-    background-color: #080;
-}
-
-#autoZoomButton[value="true"] {
-    color: #f8f;
-}
-
-button:hover {
-    background-color: #080;
-}
-
-#UIDiv {
-    display: flex;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    justify-content: flex-end;
-}
-
-#UIDiv2 {
-    padding: 5px;
-    align-content: flex-end;
-}
-
-#sumZoomButton {
-    width: 30px;
-    margin: 5px;
-}
-
-#addZoomButton {
-    width: 30px;
-    margin: 5px;
-}
-
 .container {
     width: 100%;
     height: 100dvh;
