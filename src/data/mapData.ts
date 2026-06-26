@@ -94,15 +94,9 @@ export class MapData {
                         uiPos.y
                             .setEndValue(0, endPos.y.getValue(camera.time))
                             .toEndValue();
-                        // uiPos.z.setEndValue(0, endPos.z.getValue(camera.time)).toEndValue()
-                        // uiPos.yaw.setEndValue(0, endPos.yaw.getValue(camera.time)).toEndValue()
-                        // uiPos.pitch.setEndValue(0, endPos.pitch.getValue(camera.time)).toEndValue()
                     }
                     uiPos.x.setEndValue(camera.time, pos.x);
                     uiPos.y.setEndValue(camera.time, pos.y);
-                    // uiPos.z.setEndValue(camera.time, pos.z)
-                    // if (pos.yaw) uiPos.yaw.setEndValue(camera.time, pos.yaw)
-                    // if (pos.pitch) uiPos.pitch.setEndValue(camera.time, pos.pitch)
                     posList.list.push(uiPos);
                     if (posList.list.length > aPosListMaxLen) {
                         for (let i = 0; i < posList.list.length - 1; i++) {
@@ -125,16 +119,10 @@ export class MapData {
                     };
                     listItem.x.setEndValue(0, pos.x).toEndValue();
                     listItem.y.setEndValue(0, pos.y).toEndValue();
-                    // listItem.z.setEndValue(0, pos.z).toEndValue();
-                    // if (pos.yaw) listItem.yaw.setEndValue(0, pos.yaw).toEndValue();
-                    // if (pos.pitch) listItem.pitch.setEndValue(0, pos.pitch).toEndValue();
                 }
                 newGameEntityList.set(pos.uuid, listItem);
                 listItem.x.setEndValue(camera.time, pos.x);
                 listItem.y.setEndValue(camera.time, pos.y);
-                // listItem.z.setEndValue(camera.time, pos.z)
-                // if (pos.yaw) listItem.yaw.setEndValue(camera.time, pos.yaw)
-                // if (pos.pitch) listItem.pitch.setEndValue(camera.time, pos.pitch)
             }
         }
         this.gameEntityList.value = newGameEntityList;

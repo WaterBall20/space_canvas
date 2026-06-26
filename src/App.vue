@@ -13,6 +13,7 @@ import {
     pointerMove,
     wheel,
 } from "./event/event.ts";
+import { geoLocation } from "./api/geolocation.ts";
 
 const mainMapCanvasRef = ref<HTMLCanvasElement | null>(null);
 
@@ -24,6 +25,9 @@ let autoZoomMod = 0;
 const wsClient = new WSClient("ws://192.168.43.85:4101"); // 服务端地址
 
 wsClient.onMessage((posList) => mapData.updatePos(posList, camera));
+
+//本地定位
+geoLocation((posList) => mapData.updatePos(posList, camera));
 
 function setAutoZoomMod(mod: number) {
     autoZoomMod = mod;
@@ -190,7 +194,9 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <canvas id="mapCanvas" ref="mainMapCanvasRef"></canvas>
+        <canvas
+            id="mapCanvas"
+            ref="mainMapCanvasRef"></canvas>
         <div id="UIDiv">
             <div id="UIDiv2">
                 <div v-show="camera.autoZoon.value">
@@ -199,24 +205,29 @@ onMounted(() => {
                         type="radio"
                         name="zoomMod"
                         @change="setAutoZoomMod(0)"
-                        checked
-                    />总览
+                        checked />总览
                     <input
                         type="radio"
                         name="zoomMod"
-                        @change="setAutoZoomMod(1)"
-                    />跟踪
+                        @change="setAutoZoomMod(1)" />跟踪
                 </div>
-                <button id="sumZoomButton" @click="setZoom(false)">-</button>
+                <button
+                    id="sumZoomButton"
+                    @click="setZoom(false)">
+                    -
+                </button>
                 <button
                     id="autoZoomButton"
                     event-info="up"
                     :value="UIAutoZoom.toString()"
-                    @click="setAutoZoom()"
-                >
+                    @click="setAutoZoom()">
                     自动缩放(Z)
                 </button>
-                <button id="addZoomButton" @click="setZoom(true)">+</button>
+                <button
+                    id="addZoomButton"
+                    @click="setZoom(true)">
+                    +
+                </button>
             </div>
             <div id="lDiv"></div>
         </div>
